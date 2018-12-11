@@ -1,0 +1,305 @@
+**********************************************************
+
+  I.      GENERATE HYPERSURFACE
+                ( bj_hydro.f )
+
+**********************************************************
+
+
+a) DESCRIPTION
+
+"bj_hydro.f" is the code which solves the fluid-dynamical equations of
+motion (conservation equations for energy-momentum).
+The so-called RHLLE algorithm is employed.
+The hadronization hypersurface (or any other hypersurface of given
+energy density) is computed, from which one can generate the hadron
+phase-space distribution at hadronization, see below (code "evgen.f").
+Longitudinal boost invariance and cylindrical symmetry are assumed.
+
+
+
+b) INPUT
+
+(i) The parameter file "par.dat" specifies initial conditions and
+some parameters.
+        Line 1:         1) initial time tau_i in units of initial 
+                        transverse radius; e.g., for tau_i = 0.6fm/c 
+                        and R_T = 6fm, -> tau_i = 0.1
+                        2) Number of timesteps to be calculated; typically
+                        1000. Make sure it's big enough to cover the
+                        whole hypersurface! You can check by performing
+                        a second run with slightly higher number of
+                        timesteps: if "hyper.dat" is the same, everything
+                        is ok.
+        Lines 2-4:      some technical stuff; do not change unless you've
+                        contacted the authors.
+        Line 5:         1) initial energy density. Units depend on the EoS
+			(see below).
+			eos=0 (ur-idgas + Bag Model QGP): in units of critical
+			 pressure, p_C=37*pi^2/90 T_C^4.
+			eos=1 (ur-idgas): any units you like, everything
+			 scales. Temperature will be given in same units^(1/4).
+                        eos=2 (from table): in units of eps_0 = 147.7 MeV/fm^3.
+                         Typical range (SPS-RHIC) is 45-150.
+			2) Initial radius of system, take 1.0. All time/coord.
+			 will then be in units of (physical) initial radius.
+        Line 6:         EoS ->
+			eos=0: ultrarelat. ideal gases with 3 and 37 degrees of
+			 freedom, 1st order phase transition at p=p_C.
+			eos=1: ultrarelat. ideal gas, p=e/3. No phase
+			 transition.
+			eos=2: EoS is read in from file "eos.dat"; for details
+			see below.
+
+                        NOTE: The present version 1.0 DOES NO baryon transport.
+                        The EoS has NO DEPENDENCE on baryon number, i.e.,
+			pressure is a function of energy density only.
+                        Accordingly, the quark-chemical potentials mu_q and 
+                        mu_s are always set to zero. You can print out your 
+                        favorite finite values, look at the subroutine 'sort'.
+
+        Line 7:         geometry of 1+1d expansion. 3 means long. scaling hydro
+			plus cyl. sym. transverse expansion.
+        Line 8:         energy density of the hypersurface you're interested 
+                        in.
+                        Examples (for the tab.-EoS): 
+                                - 11.9 is the boundary between QGP and 
+                                  mixed phase,
+                                - 2.85 is the boundary between mixed phase 
+                                  and hadronic phase, also called 
+                                  hadronization hypersurface,
+                                - 0.98 is the T = 140MeV isotherm,
+                                - 0.58 is the T = 130MeV isotherm.
+
+(ii) If "eos=2" is specified, the EoS is read in from "eos.dat". The following
+format is assumed  (you can modify this in subroutine "PressInit"):
+
+        first number is de, the energy density step size of the table
+        Then,
+        Column 1:       energy density in units of eps_0 = 147.7 MeV/fm^3
+        Column 2:       pressure in units of eps_0
+        Column 3:       dummy in version 1.0
+        Column 4:       temperature in MeV
+
+The table must have as many lines as expected in subroutine "PressInit",
+5000 for the sample program.
+
+* Only p(e) is actually needed to solve the fluid-dynamical equations.
+The temperature appears in the output files, but is irrelevant for the 
+propagation itself.
+
+* The sample EoS has been calculated using the 
+particle information from "part_table.dat" (for net-baryon density zero). 
+The hadronic phase is described as ideal gas of massive hadrons (including 
+a whole variety of states).
+The EoS exhibits a first order phase transition to a QGP of u,d,s quarks and 
+gluons, described within the MIT bag model; T_C=160 MeV.
+
+
+
+
+c) OUTPUT
+
+(i)  "rhllew00.dat" is the standard output.
+
+(ii) "rhllewx.dat", x>0: these files contain radial cuts taken at constant tau.
+They are generated in the subroutine "fileo(...)", every 50th timestep. You can
+modify this in the main program, right before the end of the main time step 
+loop (" 10   continue").
+"rhllew01.dat" is at time step 0 (initialization), "rhllew02.dat" at 
+time step 50 etc. The physical time (in units of R_T) corresponding to the 
+file no. x is given in "rhllew00.dat".
+
+The format of "rhllewx.dat" is:
+        Column 1:       rt, the transverse distance (in units of R_T).
+        Column 2:       temperature (MeV); if the energy density is larger
+			than the last entry in the table, T=1GeV is returned.
+			This does not affect the hydrodynamical solution,
+			because only p(e) is relevant. Once e drops below the
+			upper limit of the table, T attains the correct
+			physical value.
+        Column 3:       00-component of energy-momentum tensor, in units in
+                        which energy density is measured (eps_0 for tab.-EoS).
+        Column 4:       transverse flow velocity (natural units, c=1).
+        Column 5:       energy density in the local rest frame. In units of 
+                        eps_0=147.7MeV/fm^3 for the tab.-EoS (eos=2);
+			critical pressure p_C for eos=0;
+			whatever units have been chosen for the initial energy
+			density (eos=1, ur-idgas).
+        Column 6:       0i-component of energy-momentum tensor.
+
+(iii) "hyper.dat" is the hypersurface of given energy density (see "par.dat").
+It contains the hypersurface points (tau,rt) in the plane phi=0, eta=0, 
+where phi is the azimuthal angle and eta is the fluid rapidity, tanh(eta)=v_z.
+Due to the assumed symmetry under rotations around the beam axis and Lorentz 
+boosts along the beam axis, the hypersurface points (tau,rt) are exactly 
+the same at any other phi, eta.
+
+The format of "hyper.dat" is:
+        Columns 1,2:    rt,tau (in units of R_T).
+        Column 3:       energy density in the local rest frame (should be 
+                        very close to that specified in "par.dat")
+        Column 4:       transverse flow velocity vt.
+        Column 5:       temperature.
+        Columns 6,7:    quark-chemical potentials mu_q and mu_s. Both are zero
+                        in version 1.0.
+
+* You can use this file to plot the hypersurface in the (tau,rt) plane, 
+or to pipe it into "evgen.f" to produce a table of emitted particles, 
+see below.
+
+
+
+d) COMPILING and RUNNING
+
+the code has been tested on AIX version 4 and HP-UX. It should be possible
+to compile it with any FORTRAN-77 compiler. In some cases, the 'do...enddo'
+structure is used. If your compiler does not support such loop structures,
+replace by ' do (nr) ... (nr) continue', where (nr) is some unique statement
+number.
+No external libraries are required.
+
+(i) "bj_hydro.f" can be compiled via 'f77 -O -o bj_hydro bj_hydro.f'.
+No other routines are needed.
+
+(ii) to run the code, type 'bj_hydro'.
+The output will be written to "hyper.dat" and "rhllewxx.dat".
+
+
+
+
+
+**********************************************************
+
+  II.      GENERATE PARTICLE OUTPUT FROM HYPERSURFACE
+                        ( evgen.f )
+
+**********************************************************
+
+
+a)  DESCRIPTION
+
+The code "evgen.f" generates a table in the OSCAR output format. The
+table contains the momenta and space-time coordinates of each particle,
+similar to a cascade code.
+Longitudinal boost invariance, cylindrical and isospin symetry etc. are
+assumed.
+
+  (i)   The hypersurface file "hyper.dat" is read in, i.e., the space-time
+        points on the hypersurface, the temperature, and the flow velocity
+        at each point.
+  (ii)  The Cooper-Frye formula is employed to calculate the continuous
+        spectra of all hadron species.
+  (iii) The (normalized) hadron spectra are interpreted as probability
+        distributions, from which individual events are generated randomly.
+        The total number of hadrons of each species is the same in each
+        event. Energy fluctuations (related to the finite number of particles)
+        are possible, of course, since fluid dynamics determines only the
+        average energy-momentum tensor.
+
+
+
+
+b) INPUT
+
+(i)   The code reads the file "hyper.dat", to be generated by "bj_hydro.f" as
+described above.
+(ii)  The table containing the particle data table (masses etc.,
+"part_table.dat") has to be piped in via the standard input device.
+(iii) The parameters must be specified in "evgen_par.dat". Some remarks:
+      Lines 1-5: to improve statistics, up to 5 hadron species can be
+                 enhanced by a factor of 10. For example, to increase the
+                 multiplicity of Omega baryons and phi mesons by a factor
+                 of 10 each, specify id 46 and 56. Note: these are INTERNAL
+                 particle ids, NOT TO BE CONFUSED with the OSCAR-id.
+                 They can be looked up in the last function of "evgen.f",
+                 called "id_clust(i,idum)". Regular output, w/o any artificial
+                 enhancement, is obtained if all 5 ids are =104.
+      Line 6:    total rapidity gap (around y_{CM}=0). Since boost invariance
+                 is assumed, all rapidity bins are identical, up to
+                 fluctuations. To plot midrapidity distributions directly from
+                 the output, choose a small number, e.g. 1. If you pipe the
+                 output into some other model (afterburner),
+                 chose a larger rapidity gap to get a longer cylinder, e.g. 6.
+      Line 7:    impact parameter b. This number is only printed in the
+                 output header. It is NOT used in the code. The impact
+                 parameter is already determined by the code 
+                 "bj_hydro.f".
+                 The actual version 1.0 assumes cylindrical symmetry, i.e., 
+                 b=0.
+      Line 8:    Initial radius of the system (at time tau_i). It is used to
+                 convert positions and times into fm.
+      Line 9:    Number of events to be generated.
+      Line 10:   pt bin in MeV. Typically 50-150 MeV. The total number of
+                 pt bins used in the code is 38. Thus, the largest pt that 
+                 can be generated is (38+0.5)*dpt.
+      Line 11:   rt bin in units of initial radius. Try 0.08. The total number
+                 of rt bins is 20. Take care that the maximum rt covers the
+                 whole hypersurface.
+      Line 12:   tau bin in units of initial radius. Try 0.12. The total number
+                 of tau bins is 20. Take care that the maximum tau covers the
+                 whole hypersurface.
+      Line 13:   seed for random number generator. Usually <0. Change from
+                 time to time to get non-identical events.
+
+
+
+c) OUTPUT
+
+(i) The output is written to "events.dat". Standard OSCAR format
+('Final Particle File Format - OSC1997A') and particle ids are used.
+Particle momenta in GeV, space-time coordinates in fm.
+
+* Resonance decays are NOT performed, i.e., the output contains resonances
+like the rho meson, Delta baryon etc.
+* The explicit (A,Z) combinations and the impact parameter are 'fake'. They
+are NOT used in the code. Instead, the system size enters via the initial
+radius, to be specified in "evgen_par.dat".
+* The collision energy is 'fake'. It is determined by the initialization
+of "bj_hydro.f", and comes in via "hyper.dat". The actual number printed by
+"evgen.f" is irrelevant.
+* The frame also comes in via the initialization of "bj_hydro.dat" and the
+output generated by that code, i.e., "hyper.dat". It is always the equal-speed
+frame.
+
+
+
+
+d) PARAMETERS
+
+The following parameters can be modified directly in the source-code:
+(i)   i2maxbin: the number of pt bins.
+(ii)  imaxbin:  the number of rt and tau bins.
+(iii) Nid:      max. id of particles to appear in the output file, i.e.,
+                particles with INTERNAL id >Nid do not appear. If Nid=104,
+                all particles from the present table are generated.
+                This parameter is useful to limit memory requirements. For
+                Nid=104, i2maxbin=38, imaxbin=20, the size of the executable is
+                roughly 255 MB! For Nid=10, it shrinks to about 10%. However,
+                in this case only the following particles appear in the
+                output: pions, eta, eta', rho, omega, nucleons, N_1440,
+                N_1520, N_1535, Delta.
+
+
+
+e) COMPILING and RUNNING
+
+the code has been tested on AIX version 4 and HP-UX. It should be possible
+to compile it with any FORTRAN-77 compiler. In some cases, the 'do...enddo'
+structure is used. If your compiler does not support such loop-structures,
+replace by ' do (nr) ... (nr) continue', where (nr) is some unique statement
+number.
+No external libraries are required.
+
+(i) a random number generator is needed, e.g. "ran1.f" from the Numerical
+Recepies. Initially, "evgen.f" calls "ran1()" with the seed specified in
+the parameter file "evgen_par.dat". The random number routine will probably
+modify that argument, which is passed on as an argument in each subsequent 
+call.
+
+(ii) "evgen.f" can be compiled via 'f77 -O -o evgen evgen.f ran1.f'.
+No other routines (except for "ran1()") are needed.
+
+(iii) To run the code, type 'evgen <part_table.dat'.
+The output will be written to "events.dat".
+

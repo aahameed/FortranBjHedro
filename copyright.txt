@@ -1,0 +1,101 @@
+**********************************************************
+
+CONTRIBUTION OF A FLUID DYNAMICS CODE TO THE OSCAR ARCHIVE
+----------------------------------------------------------
+
+
+by Adrian Dumitru (a) and Dirk H. Rischke (b)
+
+(a) Physics Department, Columbia University,
+    Pupin Physics Laboratories, 538W 120th Street,
+    New York, NY 10027, U.S.A.
+    e-mail: dumitru@nt3.phys.columbia.edu
+
+(b) RIKEN-BNL Research Center, Brookhaven National Laboratory,
+    Upton, NY 11973, U.S.A.
+    e-mail: drischke@nt3.phys.columbia.edu
+
+
+
+
+1) The package provides you with a code that solves the 
+equations of motion of fluid dynamics numerically, i.e., the conservation
+equations for energy-momentum and net baryon number. 
+You can choose your own equation of state (EoS),
+two sample EoS are included.
+
+2) Furthermore, a code that calculates the hadron distributions
+and generates a particle table according to the OSCAR Standard
+Output Format ('Final Particle File Format - OSC1997A') is
+included.
+
+For more information on OSCAR see
+http://rhic.phys.columbia.edu/oscar/.
+
+
+
+
+Copyright Agreement
+-------------------
+
+We provide this code to enable interested colleagues to
+investigate fluid-dynamical behavior in high-energy nuclear
+collisions. In particular, the dependence of
+ (i)   time-scales for cooling/hadronization and expansion,
+ (ii)  the collective flow velocity, 
+ (iii) average pt of emitted hadrons
+etc. on initial conditions and the EoS may be interesting.
+Of course, you are free to study your favorite topics.
+
+Note, however, that code development, testing, debugging and
+documentation requires a substantial amount of time. We therefore
+kindly request giving proper credit to the authors.
+
++++++++++++++++++++++++
+Source and documentation are provided freely for the purpose of
+checking and reproducing published results of the authors. 
+Using the code (or any parts of it) implies acceptance of the
+following statement:
+   I agree not to publish any results based on this code, or any
+   subroutines, functions, data tables, or other parts of it,
+   without explicit consent of the authors. 
++++++++++++++++++++++++
+
+
+* The specific implementation of the RHLLE algorithm as included in
+this package has been published in [1]. In that reference, you can
+also find comparisons to other algorithms for numerical fluid dynamics
+and analytical solutions, as well as a more detailed discussion of
+technical and numerical 'details'.
+
+* The treatment of non-zero net baryon number, and the EoS that
+includes the whole variety of hadronic states, have been introduced
+in ref. [2]. (However, the sample EoS included in this package is
+independent of net baryon density, unlike that employed in [2]).
+You can also find discussions of initial conditions, hypersurfaces,
+and hadron pt spectra in [2].
+
+* Matching fully relativistic fluid dynamics to microscopic transport
+models on a given space-time hypersurface was introduced in [3].
+There, the code that generates individual events from the currents
+obtained within fluid dynamics was employed for the first time.
+
+* The physics content (basic equations, assumptions etc.) of ideal,
+relativistic fluid dynamics is discussed in detail in [1-4], where
+you can also find references to related work.
+
+
+REFERENCES:
+[1] D.H. Rischke, S. Bernard and J.A. Maruhn,
+    Nucl. Phys. A595, 346 (1995).
+[2] A. Dumitru and D.H. Rischke,
+    Phys. Rev. C59, 354 (1999).
+[3] A. Dumitru et al., Phys. Lett. B460, 411 (1999) (Los Alamos e-print 
+		archive nucl-th/9901046);
+    S.A. Bass et al., Phys. Rev. C60, 021902 (1999) (Los Alamos e-print
+		archive nucl-th/9902062).
+[4] B. Waldhauser, D.H. Rischke, U. Katscher, J.A. Maruhn, H. Stoecker and
+    W. Greiner, Z. Phys. C54, 459 (1992);
+    D.H. Rischke, Nucl. Phys. A610, 88c (1996).
+
+**********************************************************

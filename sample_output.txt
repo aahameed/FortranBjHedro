@@ -1,0 +1,31 @@
+The sample run has been performed on a digital-500au workstation running
+Digital Unix.
+
+The sample output "hyper.dat" and "rhllewxx.dat" was obtained by
+"bj_hydro.f" with the following "par.dat" file:
+0.1 500
+0.01
+0.99
+0.5
+100.0 1.0
+2
+3
+2.85
+
+
+
+From "hyper.dat", evgen.f (with Nid=10 in the code) produced the output
+"events.dat" using the following "evgen_par.dat" parameterfile:
+104             ! id of particle to be enhanced
+104             ! id of particle to be enhanced
+104             ! id of particle to be enhanced
+104             ! id of particle to be enhanced
+104             ! id of particle to be enhanced
+4d0             ! total rapidity gap
+0d0             ! impact parameter
+6d0             ! initial Radius
+10		! # of events
+80d0		! pt-bin, in MeV
+0.08		! rt-bin, in units of R
+0.12		! t-bin, in units of R
+-33		! seed for random number generator, <0
